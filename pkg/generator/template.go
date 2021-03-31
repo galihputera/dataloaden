@@ -21,7 +21,7 @@ import (
 
 // {{.Name}}Config captures the config to create a new {{.Name}}
 type {{.Name}}Config struct {
-	// Fetch is a method that provides the data for the loader 
+	// Fetch is a method that provides the data for the loader
 	Fetch func(keys []{{.KeyType.String}}) ([]{{.ValType.String}}, []error)
 
 	// Wait is how long wait before sending a batch
@@ -40,7 +40,7 @@ func New{{.Name}}(config {{.Name}}Config) *{{.Name}} {
 	}
 }
 
-// {{.Name}} batches and caches requests          
+// {{.Name}} batches and caches requests
 type {{.Name}} struct {
 	// this method provides the data for the loader
 	fetch func(keys []{{.KeyType.String}}) ([]{{.ValType.String}}, []error)
@@ -53,8 +53,10 @@ type {{.Name}} struct {
 
 	// INTERNAL
 
+	{{if .EnableCache}}
 	// lazily created cache
 	cache map[{{.KeyType.String}}]{{.ValType.String}}
+	{{end}}
 
 	// the current batch. keys will continue to be collected until timeout is hit,
 	// then everything will be sent to the fetch method and out to the listeners
@@ -82,12 +84,14 @@ func (l *{{.Name}}) Load(key {{.KeyType.String}}) ({{.ValType.String}}, error) {
 // different data loaders without blocking until the thunk is called.
 func (l *{{.Name}}) LoadThunk(key {{.KeyType.String}}) func() ({{.ValType.String}}, error) {
 	l.mu.Lock()
+	{{if .EnableCache}}
 	if it, ok := l.cache[key]; ok {
 		l.mu.Unlock()
 		return func() ({{.ValType.String}}, error) {
 			return it, nil
 		}
 	}
+	{{end}}
 	if l.batch == nil {
 		l.batch = &{{.Name|lcFirst}}Batch{done: make(chan struct{})}
 	}
@@ -156,6 +160,7 @@ func (l *{{.Name}}) LoadAllThunk(keys []{{.KeyType}}) (func() ([]{{.ValType.Stri
 	}
 }
 
+{{if .EnableCache}}
 // Prime the cache with the provided key and value. If the key already exists, no change is made
 // and false is returned.
 // (To forcefully prime the cache, clear the key first with loader.clear(key).prime(key, value).)
@@ -181,20 +186,25 @@ func (l *{{.Name}}) Prime(key {{.KeyType}}, value {{.ValType.String}}) bool {
 	l.mu.Unlock()
 	return !found
 }
+{{end}}
 
+{{if .EnableCache}}
 // Clear the value at key from the cache, if it exists
 func (l *{{.Name}}) Clear(key {{.KeyType}}) {
 	l.mu.Lock()
 	delete(l.cache, key)
 	l.mu.Unlock()
 }
+{{end}}
 
+{{if .EnableCache}}
 func (l *{{.Name}}) unsafeSet(key {{.KeyType}}, value {{.ValType.String}}) {
 	if l.cache == nil {
 		l.cache = map[{{.KeyType}}]{{.ValType.String}}{}
 	}
 	l.cache[key] = value
 }
+{{end}}
 
 // keyIndex will return the location of the key in the batch, if its not found
 // it will add the key to the batch

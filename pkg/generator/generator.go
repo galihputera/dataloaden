@@ -15,10 +15,11 @@ import (
 )
 
 type templateData struct {
-	Package string
-	Name    string
-	KeyType *goType
-	ValType *goType
+	Package     string
+	Name        string
+	EnableCache bool
+	KeyType     *goType
+	ValType     *goType
 }
 
 type goType struct {
