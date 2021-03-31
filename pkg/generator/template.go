@@ -115,11 +115,13 @@ func (l *{{.Name}}) LoadThunk(key {{.KeyType.String}}) func() ({{.ValType.String
 			err = batch.error[pos]
 		}
 
+		{{if .EnableCache}}
 		if err == nil {
 			l.mu.Lock()
 			l.unsafeSet(key, data)
 			l.mu.Unlock()
 		}
+		{{end}}
 
 		return data, err
 	}

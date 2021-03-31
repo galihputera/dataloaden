@@ -9,5 +9,3 @@ require (
 	github.com/stretchr/testify v1.2.1
 	golang.org/x/tools v0.0.0-20190515012406-7d7faa4812bd
 )
-
-replace github.com/vektah/dataloaden => github.com/galihputera/dataloaden v0.4.0
